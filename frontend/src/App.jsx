@@ -74,21 +74,31 @@ function App() {
 
   const handleQuickSearch = async (name) => {
     if (!name) return
+    setSearchResult(null)
+    setSearchMessage('')
     setSearchLoading(true)
+    
+    // Start timer for minimum generic loading delay
+    const startTime = Date.now()
+    
     try {
       const response = await fetch(`http://127.0.0.1:5000/api/search?name=${encodeURIComponent(name)}`)
       const data = await response.json()
+      
       if (response.ok) {
         setSearchResult(data)
-        setSearchMessage('')
       } else {
-        setSearchResult(null)
         setSearchMessage(data.message)
       }
     } catch {
-      setSearchResult(null)
       setSearchMessage('Error searching record')
     } finally {
+      // Ensure specific minimum duration of 3 seconds
+      const elapsed = Date.now() - startTime
+      const remaining = 3000 - elapsed
+      if (remaining > 0) {
+        await new Promise(resolve => setTimeout(resolve, remaining))
+      }
       setSearchLoading(false)
     }
   }
@@ -213,7 +223,7 @@ function App() {
           </form>
           {searchLoading && (
             <div className="mt-4 relative z-20">
-              <div className="flex justify-center items-center h-20">
+              <div className="flex justify-center items-center h-20 text-white">
                 <LoaderFive text="Searching..." />
               </div>
             </div>

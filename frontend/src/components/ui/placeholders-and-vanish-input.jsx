@@ -40,14 +40,14 @@ export const PlaceholdersAndVanishInput = forwardRef(({
   const canvasRef = useRef(null);
   const newDataRef = useRef([]);
   const inputRef = useRef(null);
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(propValue || "");
+  const [prevPropValue, setPrevPropValue] = useState(propValue);
   const [animating, setAnimating] = useState(false);
 
-  useEffect(() => {
-    if (propValue !== undefined) {
-      setValue(propValue);
-    }
-  }, [propValue]);
+  if (propValue !== undefined && propValue !== prevPropValue) {
+    setValue(propValue);
+    setPrevPropValue(propValue);
+  }
 
   useImperativeHandle(ref, () => inputRef.current);
 
