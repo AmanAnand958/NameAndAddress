@@ -3,7 +3,7 @@ trap "kill 0" EXIT
 
 # Start the backend
 echo "Starting Flask Backend..."
-python hello.py &
+python backend/app.py &
 
 # Start the frontend
 echo "Starting React Frontend..."

@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)
 app.secret_key = 'your_secret_key_here'  # Change this to a random secret key
 
-DATABASE = 'records.db'
+DATABASE = os.path.join(os.path.dirname(__file__), 'data', 'records.db')
 
 def get_db():
     db = sqlite3.connect(DATABASE)
