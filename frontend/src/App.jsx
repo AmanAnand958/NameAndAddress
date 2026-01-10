@@ -109,6 +109,16 @@ function App() {
     await handleQuickSearch(name)
   }
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    // Clear states when switching tabs
+    setAddMessage('')
+    setSearchResult(null)
+    setSearchMessage('')
+    setSearchName('')
+    setFormData({ name: '', address: '' })
+  }
+
   return (
     <BackgroundLines className="flex items-center justify-center w-full flex-col px-4">
       <div className="min-h-screen relative flex flex-col items-center justify-center gap-10 w-full">
@@ -253,12 +263,34 @@ function App() {
                   {searchResult.name}
                 </h1>
      
-                <div className="font-normal text-base text-slate-500 mb-4 relative z-50 max-h-40 overflow-y-auto">
-                  {searchResult.addresses.map((addr, index) => (
-                    <p key={index} className="mb-1 border-b border-gray-700/50 pb-1 last:border-0 last:pb-0">
-                      {addr}
-                    </p>
-                  ))}
+                <div className="font-normal text-base text-slate-500 mb-4 relative z-50 max-h-60 overflow-y-auto w-full">
+                  {searchResult.detailed_results && searchResult.detailed_results.length > 0 ? (
+                    searchResult.detailed_results.map((res, index) => (
+                      <div key={index} className="mb-4 border-b border-gray-700/50 pb-2 last:border-0 last:pb-0">
+                        <p className="text-white font-medium mb-1">{res.address}</p>
+                        {res.neighbors && res.neighbors.length > 0 ? (
+                          <div className="text-sm">
+                            <span className="text-indigo-400 font-semibold block mt-1">Family Members:</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {res.neighbors.map((neighbor, nIdx) => (
+                                <span key={nIdx} className="bg-gray-800 text-gray-300 px-2 py-0.5 rounded text-xs border border-gray-700">
+                                  {neighbor}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs italic text-slate-600">No other neighbors found</p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    searchResult.addresses.map((addr, index) => (
+                      <p key={index} className="mb-1 border-b border-gray-700/50 pb-1 last:border-0 last:pb-0">
+                        {addr}
+                      </p>
+                    ))
+                  )}
                 </div>
      
                 <Meteors number={20} />
@@ -278,12 +310,12 @@ function App() {
               {
                 title: 'Input Data',
                 icon: '✏️',
-                onClick: () => setActiveTab('add'),
+                onClick: () => handleTabChange('add'),
               },
               {
                 title: 'Fetch Data',
                 icon: '🔍',
-                onClick: () => setActiveTab('search'),
+                onClick: () => handleTabChange('search'),
               },
             ]}
           />

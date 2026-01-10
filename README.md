@@ -14,6 +14,7 @@ A full-stack application with a Flask backend and a React (Vite) frontend.
     ```bash
     cd backend
     pip install -r requirements.txt
+    # Create a .env file and add your MONGO_URI
     python app.py
     ```
 2.  **Frontend**:
