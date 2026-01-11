@@ -45,7 +45,7 @@ function App() {
     }
     setAddLoading(true)
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/add', {
+      const response = await fetch('/api/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ function App() {
     const startTime = Date.now()
     
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/search?name=${encodeURIComponent(name)}`)
+      const response = await fetch(`/api/search?name=${encodeURIComponent(name)}`)
       const data = await response.json()
       
       if (response.ok) {

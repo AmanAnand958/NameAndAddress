@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 import urllib.parse
 
 # Load environment variables
-load_dotenv()
+# Load environment variables
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 app = Flask(__name__)
 CORS(app)
@@ -32,7 +33,9 @@ if MONGO_URI:
     except Exception as e:
         print(f"Note: Could not automatically process MONGO_URI: {e}")
 
-client = MongoClient(MONGO_URI)
+import certifi
+
+client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client[MONGO_DB_NAME]
 records_collection = db['records']
 
@@ -118,4 +121,4 @@ def search():
     return jsonify({'error': 'Name parameter required'}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8080)
