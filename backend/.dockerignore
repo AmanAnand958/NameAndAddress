@@ -1,0 +1,10 @@
+# Docker
+.env
+node_modules
+dist
+.git
+.gitignore
+*.md
+.venv
+__pycache__
+*.pyc

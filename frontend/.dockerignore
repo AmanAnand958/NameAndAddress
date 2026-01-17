@@ -1,0 +1,6 @@
+# Docker
+node_modules
+dist
+.git
+.gitignore
+*.md

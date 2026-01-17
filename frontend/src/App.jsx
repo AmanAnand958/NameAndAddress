@@ -1,51 +1,43 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { EncryptedText } from './components/ui/encrypted-text'
-import { LoaderFive } from './components/ui/Loader'
 import { BackgroundLines } from './components/ui/background-lines'
 import { FloatingDock } from './components/ui/floating-dock'
+import { AuroraBackground } from './components/ui/aurora-background'
 import { PlaceholdersAndVanishInput } from './components/ui/placeholders-and-vanish-input'
-import { CardSpotlight } from './components/ui/card-spotlight'
-import { Button } from './components/ui/moving-border'
-import { Meteors } from './components/ui/meteors'
-import confetti from 'canvas-confetti'
 
 function App() {
   const [addMessage, setAddMessage] = useState('')
   const [searchResult, setSearchResult] = useState(null)
   const [searchMessage, setSearchMessage] = useState('')
-  const [activeTab, setActiveTab] = useState('add')
+  const [showAddForm, setShowAddForm] = useState(true)
+  const [showSearchForm, setShowSearchForm] = useState(true)
   const [addLoading, setAddLoading] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
   const [formData, setFormData] = useState({ name: '', address: '' })
-  const [searchName, setSearchName] = useState('')
+
+  const handleAddVanishInput = (value) => {
+    setFormData({ ...formData, name: value })
+  }
+
+  const handleAddressVanishInput = (value) => {
+    setFormData({ ...formData, address: value })
+  }
 
   const handleSearchVanishInput = (value) => {
     handleQuickSearch(value)
   }
 
-  const addressInputRef = useRef(null)
-
-  const handleNameSubmit = (value) => {
-    setFormData(prev => ({ ...prev, name: value }))
-    addressInputRef.current?.focus()
-  }
-
-  const handleAddressSubmit = (value) => {
-    setFormData(prev => ({ ...prev, address: value }))
-    handleAdd({ preventDefault: () => {} })
-  }
-
   const handleAdd = async (e) => {
-    if (e && e.preventDefault) e.preventDefault()
-    const name = formData.name
-    const address = formData.address
+    e.preventDefault()
+    const name = formData.name || e.target.name.value
+    const address = formData.address || e.target.address.value
     if (!name || !address) {
       setAddMessage('Please provide both name and address')
       return
     }
     setAddLoading(true)
     try {
-      const response = await fetch('/api/add', {
+      const response = await fetch('http://127.0.0.1:5000/api/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,16 +48,11 @@ function App() {
       if (response.ok) {
         setAddMessage(data.message)
         setFormData({ name: '', address: '' })
-        if (e && e.target && e.target.reset) e.target.reset()
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        })
+        e.target.reset()
       } else {
         setAddMessage(data.error)
       }
-    } catch {
+    } catch (error) {
       setAddMessage('Error adding record')
     } finally {
       setAddLoading(false)
@@ -74,77 +61,68 @@ function App() {
 
   const handleQuickSearch = async (name) => {
     if (!name) return
-    setSearchResult(null)
-    setSearchMessage('')
     setSearchLoading(true)
-    
-    // Start timer for minimum generic loading delay
-    const startTime = Date.now()
-    
     try {
-      const response = await fetch(`/api/search?name=${encodeURIComponent(name)}`)
+      const response = await fetch(`http://127.0.0.1:5000/api/search?name=${encodeURIComponent(name)}`)
       const data = await response.json()
-      
       if (response.ok) {
         setSearchResult(data)
+        setSearchMessage('')
       } else {
+        setSearchResult(null)
         setSearchMessage(data.message)
       }
-    } catch {
+    } catch (error) {
+      setSearchResult(null)
       setSearchMessage('Error searching record')
     } finally {
-      // Ensure specific minimum duration of 3 seconds
-      const elapsed = Date.now() - startTime
-      const remaining = 3000 - elapsed
-      if (remaining > 0) {
-        await new Promise(resolve => setTimeout(resolve, remaining))
-      }
       setSearchLoading(false)
     }
   }
 
   const handleSearch = async (e) => {
     e.preventDefault()
-    const name = searchName || e.target.searchName.value
+    const name = e.target.searchName.value
     await handleQuickSearch(name)
   }
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab)
-    // Clear states when switching tabs
-    setAddMessage('')
-    setSearchResult(null)
-    setSearchMessage('')
-    setSearchName('')
-    setFormData({ name: '', address: '' })
-  }
-
   return (
-    <BackgroundLines className="flex items-center justify-center w-full flex-col px-4">
-      <div className="min-h-screen relative flex flex-col items-center justify-center gap-10 w-full">
+    <AuroraBackground>
+      <div className="min-h-screen relative flex items-center justify-center">
+        <FloatingDock
+          items={[
+            {
+              title: 'Input Data',
+              icon: '✏️',
+              onClick: () => setShowAddForm(!showAddForm),
+            },
+            {
+              title: 'Fetch Data',
+              icon: '🔍',
+              onClick: () => setShowSearchForm(!showSearchForm),
+            },
+          ]}
+        />
         
-        <div className="max-w-md w-full space-y-8 relative z-10 z-[20]">
+        <div className="max-w-md w-full space-y-8 relative z-10">
           <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
               <EncryptedText text="Name and Address Database" encrypted={true} duration={1500} />
             </h2>
           </div>
 
         {/* Add Form */}
-        {activeTab === 'add' && (
-        <CardSpotlight className="p-8">
-          <h3 className="text-xl font-bold text-neutral-200 mb-6 z-20 relative">Add a Record</h3>
-          <form onSubmit={handleAdd} className="space-y-6 relative z-20">
+        {showAddForm && (
+        <div className="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Add a Record</h3>
+          <form onSubmit={handleAdd} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-neutral-300 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 Name
               </label>
               <PlaceholdersAndVanishInput
                 placeholders={['Enter name', 'John Doe', 'Your name here']}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                onSubmit={handleNameSubmit}
-                vanishOnSubmit={false}
-                value={formData.name}
+                onSubmit={handleAddVanishInput}
               />
               <input
                 id="name"
@@ -156,15 +134,12 @@ function App() {
               />
             </div>
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-neutral-300 mb-2">
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
                 Address
               </label>
               <PlaceholdersAndVanishInput
-                ref={addressInputRef}
                 placeholders={['Enter address', '123 Main St', 'Your address here']}
-                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                onSubmit={handleAddressSubmit}
-                value={formData.address}
+                onSubmit={handleAddressVanishInput}
               />
               <input
                 id="address"
@@ -175,40 +150,36 @@ function App() {
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               />
             </div>
-            <div className="flex justify-center pt-4">
-              <Button
-                borderRadius="1.75rem"
-                className="bg-slate-900 text-white border-neutral-200 dark:border-slate-800"
-                type="submit"
-                disabled={addLoading}
-              >
-                {addLoading ? 'Adding...' : 'Add Record'}
-              </Button>
-            </div>
+            <button
+              type="submit"
+              disabled={addLoading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {addLoading ? 'Adding...' : 'Add Record'}
+            </button>
           </form>
           {addLoading && (
-            <div className="mt-4 relative z-20">
-              <p className="text-center text-sm text-indigo-400">Adding record...</p>
+            <div className="mt-4">
+              <p className="text-center text-sm text-indigo-600">Adding record...</p>
             </div>
           )}
           {addMessage && !addLoading && (
-            <p className="mt-4 text-sm text-green-400 relative z-20">{addMessage}</p>
+            <p className="mt-4 text-sm text-green-600">{addMessage}</p>
           )}
-        </CardSpotlight>
+        </div>
         )}
 
         {/* Search Form */}
-        {activeTab === 'search' && (
-        <CardSpotlight className="p-8">
-          <h3 className="text-xl font-bold text-neutral-200 mb-6 z-20 relative">Search for a Record</h3>
-          <form onSubmit={handleSearch} className="space-y-6 relative z-20">
+        {showSearchForm && (
+        <div className="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Search for a Record</h3>
+          <form onSubmit={handleSearch} className="space-y-6">
             <div>
-              <label htmlFor="searchName" className="block text-sm font-medium text-neutral-300 mb-2">
+              <label htmlFor="searchName" className="block text-sm font-medium text-gray-700 mb-2">
                 Name to search
               </label>
               <PlaceholdersAndVanishInput
                 placeholders={['Enter name to search', 'Find by name', 'Search here']}
-                onChange={(e) => setSearchName(e.target.value)}
                 onSubmit={handleSearchVanishInput}
               />
               <input
@@ -216,112 +187,35 @@ function App() {
                 name="searchName"
                 type="text"
                 hidden
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
               />
             </div>
-            <div className="flex justify-center pt-4">
-              <Button
-                borderRadius="1.75rem"
-                className="bg-slate-900 text-white border-neutral-200 dark:border-slate-800"
-                type="submit"
-                disabled={searchLoading}
-              >
-                {searchLoading ? 'Searching...' : 'Search'}
-              </Button>
-            </div>
+            <button
+              type="submit"
+              disabled={searchLoading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {searchLoading ? 'Searching...' : 'Search'}
+            </button>
           </form>
           {searchLoading && (
-            <div className="mt-4 relative z-20">
-              <div className="flex justify-center items-center h-20 text-white">
-                <LoaderFive text="Searching..." />
-              </div>
+            <div className="mt-4">
+              <p className="text-center text-sm text-indigo-600">Searching...</p>
             </div>
           )}
           {searchResult && !searchLoading && (
-            <div className="mt-6 w-full relative max-w-xs">
-              <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-blue-500 to-teal-500 transform scale-[0.80] bg-red-500 rounded-full blur-3xl" />
-              <div className="relative shadow-xl bg-gray-900 border border-gray-800  px-4 py-8 h-full overflow-hidden rounded-2xl flex flex-col justify-end items-start text-white">
-                <div className="h-5 w-5 rounded-full border flex items-center justify-center mb-4 border-gray-500">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="h-2 w-2 text-gray-300"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M4.5 4.5l15 15m0 0V8.25m0 11.25H8.25"
-                    />
-                  </svg>
-                </div>
-     
-                <h1 className="font-bold text-xl text-white mb-4 relative z-50">
-                  {searchResult.name}
-                </h1>
-     
-                <div className="font-normal text-base text-slate-500 mb-4 relative z-50 max-h-60 overflow-y-auto w-full">
-                  {searchResult.detailed_results && searchResult.detailed_results.length > 0 ? (
-                    searchResult.detailed_results.map((res, index) => (
-                      <div key={index} className="mb-4 border-b border-gray-700/50 pb-2 last:border-0 last:pb-0">
-                        <p className="text-white font-medium mb-1">{res.address}</p>
-                        {res.neighbors && res.neighbors.length > 0 ? (
-                          <div className="text-sm">
-                            <span className="text-indigo-400 font-semibold block mt-1">Family Members:</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {res.neighbors.map((neighbor, nIdx) => (
-                                <span key={nIdx} className="bg-gray-800 text-gray-300 px-2 py-0.5 rounded text-xs border border-gray-700">
-                                  {neighbor}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-xs italic text-slate-600">No other neighbors found</p>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    searchResult.addresses.map((addr, index) => (
-                      <p key={index} className="mb-1 border-b border-gray-700/50 pb-1 last:border-0 last:pb-0">
-                        {addr}
-                      </p>
-                    ))
-                  )}
-                </div>
-     
-                <Meteors number={20} />
-              </div>
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm font-medium text-green-800">Name: {searchResult.name}</p>
+              <p className="text-sm text-green-700">Address: {searchResult.address}</p>
             </div>
           )}
           {searchMessage && !searchLoading && (
-            <p className="mt-4 text-sm text-red-400 relative z-20">{searchMessage}</p>
+            <p className="mt-4 text-sm text-red-600">{searchMessage}</p>
           )}
-        </CardSpotlight>
+        </div>
         )}
         </div>
-
-        <div className="relative z-50">
-          <FloatingDock
-            items={[
-              {
-                title: 'Input Data',
-                icon: '✏️',
-                onClick: () => handleTabChange('add'),
-              },
-              {
-                title: 'Fetch Data',
-                icon: '🔍',
-                onClick: () => handleTabChange('search'),
-              },
-            ]}
-          />
-        </div>
       </div>
-    </BackgroundLines>
+    </AuroraBackground>
   )
 }
 

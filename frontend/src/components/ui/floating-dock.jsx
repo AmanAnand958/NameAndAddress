@@ -17,18 +17,21 @@ const FloatingDockMobile = ({
   className
 }) => {
   const [open, setOpen] = useState(false);
-  return <div className={cn("relative block md:hidden", className)}>
+  return <div className={cn("relative flex items-center gap-2 md:hidden", className)}>
+      <button onClick={() => setOpen(!open)} className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 dark:bg-neutral-800">
+        <IconLayoutNavbarCollapse className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+      </button>
       <AnimatePresence>
-        {open && <motion.div layoutId="nav" className="absolute inset-x-0 bottom-full mb-2 flex flex-col gap-2">
+        {open && <motion.div layoutId="nav" className="flex flex-row gap-2">
             {items.map((item, idx) => <motion.div key={item.title} initial={{
           opacity: 0,
-          y: 10
+          x: -10
         }} animate={{
           opacity: 1,
-          y: 0
+          x: 0
         }} exit={{
           opacity: 0,
-          y: 10,
+          x: -10,
           transition: {
             delay: idx * 0.05
           }
@@ -54,9 +57,6 @@ const FloatingDockMobile = ({
               </motion.div>)}
           </motion.div>}
       </AnimatePresence>
-      <button onClick={() => setOpen(!open)} className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 dark:bg-neutral-800">
-        <IconLayoutNavbarCollapse className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
-      </button>
     </div>;
 };
 const FloatingDockDesktop = ({
